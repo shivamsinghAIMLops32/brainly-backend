@@ -9,11 +9,12 @@ import {
   linkZodSchema,
 } from "./middleware/validation";
 import validate from "./middleware/validate";
-import { ContentModel, UserModel } from "./models/db.model";
+import { ContentModel, LinkModel, UserModel } from "./models/db.model";
 import bcrypt from "bcryptjs";
 import authMiddleware from "./middleware/auth.user";
 import cookieParser from "cookie-parser";
 import mongoose from "mongoose";
+import crypto from 'crypto';
 const app = express();
 
 dotenv.config();
@@ -161,12 +162,58 @@ app.delete("/api/v1/content", authMiddleware,async (req: Request, res: Response)
 });
 
 // Share Brain Route
-app.post("/api/v1/brain/share", (req: Request, res: Response) => {
-  // Your brain share logic here
+app.post("/api/v1/brain/share", authMiddleware, async (req: Request, res: Response) :Promise<any>=> {
+  const { contentId } = req.body;
+  const userId = req.userId; // Get the user ID from the authenticated request
+
+  if (!contentId) {
+    return res.status(400).json({ message: "Content ID is required!" });
+  }
+
+  try {
+    // Check if the content exists and belongs to the user
+    const content = await ContentModel.findOne({ _id: contentId, userId });
+    if (!content) {
+      return res.status(404).json({ message: "Content not found or unauthorized!" });
+    }
+
+    // Generate a unique hash for the shareable link
+    const hash = crypto.randomBytes(16).toString('hex');
+
+    // Save the shareable link in the database
+    await LinkModel.create({ hash, userId });
+
+    // Return the shareable link
+    const shareLink = `${req.protocol}://${req.get('host')}/api/v1/brain/${hash}`;
+    return res.status(200).json({ message: "Shareable link created!", shareLink });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Something went wrong!" });
+  }
 });
 
-app.get("/api/v1/brain/:shareLink", (req: Request, res: Response) => {
-  // Your logic for fetching shared brain link here
+app.get("/api/v1/brain/:shareLink", async (req: Request, res: Response) :Promise<any>=> {
+  const { shareLink } = req.params;
+
+  try {
+    // Find the link in the database
+    const link = await LinkModel.findOne({ hash: shareLink });
+    if (!link) {
+      return res.status(404).json({ message: "Invalid or expired share link!" });
+    }
+
+    // Find the content associated with the link
+    const content = await ContentModel.findOne({ userId: link.userId }).populate("userId", "username");
+    if (!content) {
+      return res.status(404).json({ message: "Content not found!" });
+    }
+
+    // Return the shared content
+    return res.status(200).json({ content });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Something went wrong!" });
+  }
 });
 
 // Global error handler
