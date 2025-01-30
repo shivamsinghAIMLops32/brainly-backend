@@ -21,9 +21,12 @@ const validate_1 = __importDefault(require("./middleware/validate"));
 const db_model_1 = require("./models/db.model");
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const auth_user_1 = __importDefault(require("./middleware/auth.user"));
+const cookie_parser_1 = __importDefault(require("cookie-parser"));
+const mongoose_1 = __importDefault(require("mongoose"));
 const app = (0, express_1.default)();
 dotenv_1.default.config();
 app.use(express_1.default.json());
+app.use((0, cookie_parser_1.default)()); // for req.cookies
 // Signup Route
 app.post("/api/v1/signup", (0, validate_1.default)(validation_1.userZodSchema), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { username, password } = req.body;
@@ -60,7 +63,7 @@ app.post("/api/v1/signin", (0, validate_1.default)(validation_1.userZodSchema), 
         }
         // Generate JWT token
         const token = jsonwebtoken_1.default.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
-        // setting cookie as name as token 
+        // setting cookie as name as token
         res.cookie("token", token, {
             expires: new Date(Date.now() + 3600000), // 1 hour
             httpOnly: true,
@@ -74,15 +77,63 @@ app.post("/api/v1/signin", (0, validate_1.default)(validation_1.userZodSchema), 
     }
 }));
 // Content Routes
-app.post("/api/v1/content", auth_user_1.default, (req, res) => {
+app.post("/api/v1/content", auth_user_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     // how to get get id of user so use auth middleware and get get that stored in token as jwt.sign(token,jwtsecret)
-});
-app.get("/api/v1/content", (req, res) => {
+    const userId = req.userId; // from decoded token
+    const { title, type, content, tags, link } = req.body;
+    console.log('content');
+    try {
+        yield db_model_1.ContentModel.create({
+            title,
+            type,
+            content,
+            tags,
+            link,
+            userId: userId,
+        });
+        return res.status(200).json({
+            message: "Content created successfully!",
+        });
+    }
+    catch (error) {
+        return res.status(500).json({
+            message: "Error creating content!",
+            // @ts-ignore
+            error: error.message,
+        });
+    }
+}));
+app.get("/api/v1/content", auth_user_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     // Your content fetching logic here
-});
-app.delete("/api/v1/content", (req, res) => {
-    // Your content deletion logic here
-});
+    const userId = req.userId;
+    console.log(`i am user id  of get content with user id : ${userId} and ${typeof userId}`);
+    try {
+        const userContent = yield db_model_1.ContentModel.findOne({ userId: new mongoose_1.default.Types.ObjectId(userId) }).populate("userId", "username");
+        return res.status(200).json({ userContent });
+    }
+    catch (error) {
+        // @ts-ignore 
+        return res.status(500).json({ message: error.message || error });
+    }
+}));
+app.delete("/api/v1/content", auth_user_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    // take userid
+    const userId = req.userId;
+    const contentId = req.body.contentId;
+    if (!contentId) {
+        //@ts-ignore
+        return res.status(400).json({ message: "Content Id is required" });
+    }
+    try {
+        const val = yield db_model_1.ContentModel.deleteMany({ _id: contentId, userId: userId });
+        console.log(JSON.stringify(val));
+        return res.status(200).json({ message: "Content deleted successfully!" });
+    }
+    catch (error) {
+        //@ts-ignore
+        return res.status(400).json({ message: "error in deleting content ${contentId}" });
+    }
+}));
 // Share Brain Route
 app.post("/api/v1/brain/share", (req, res) => {
     // Your brain share logic here
