@@ -1,1 +1,1 @@
-{"root":["./src/index.ts","./src/config/mongodb.config.ts"],"version":"5.7.3"}
+{"root":["./src/index.ts","./src/config/mongodb.config.ts","./src/middleware/auth.user.ts","./src/middleware/validate.ts","./src/middleware/validation.ts","./src/models/db.model.ts","./src/types/express.d.ts"],"version":"5.7.3"}
