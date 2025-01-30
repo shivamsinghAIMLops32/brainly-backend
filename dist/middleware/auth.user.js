@@ -16,8 +16,8 @@ const authMiddleware = (req, res, next) => {
         // Decode the JWT token
         const decodedToken = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET);
         // Attach the decoded user information (e.g., user ID) to the req.user
-        // @ts-ignore  override the types of express req object
-        req.userId = decodedToken.id; // you can store other user information if needed
+        // @ts-ignore  override the types of express req
+        req.userId = decodedToken; // you can store other user information if needed
     }
     catch (error) {
         return res.status(401).json({ error: 'Invalid or expired token' });
