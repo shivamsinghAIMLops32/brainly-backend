@@ -3,8 +3,8 @@ import mongoose from "mongoose";
 // User schema
 const userSchema = new mongoose.Schema(
   {
-    username: { type: String, required: true, unique: true, index: true }, // Make sure indexing is intended for performance reasons
-    password: { type: String, required: true },
+    username: { type: String, required: true, unique: true, index: true }, // Indexing for performance reasons
+    password: { type: String, required: true }, // Store hashed password here
   },
   { timestamps: true }
 );
@@ -16,8 +16,8 @@ const contentSchema = new mongoose.Schema(
     link: { type: String, required: true },
     type: { type: String, enum: ["article", "video", "image"], required: true },
     content: { type: String, required: true },
-    tags: [{ type: mongoose.Schema.Types.ObjectId, ref: "Tag" }], // Use the model name "Tag" for references
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // Use the model name "User" for references
+    tags: [{ type: mongoose.Schema.Types.ObjectId, ref: "Tag" }],
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   },
   { timestamps: true }
 );
@@ -26,7 +26,8 @@ const contentSchema = new mongoose.Schema(
 const linkSchema = new mongoose.Schema(
   {
     hash: { type: String, required: true },
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // Use the model name "User"
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    // contentId: { type: mongoose.Schema.Types.ObjectId, ref: "Content", required: true },
   },
   { timestamps: true }
 );
@@ -34,12 +35,12 @@ const linkSchema = new mongoose.Schema(
 // Tag schema
 const tagSchema = new mongoose.Schema(
   {
-    title: { type: String, required: true },
+    title: { type: String, required: true, unique: true },
   },
   { timestamps: true }
 );
 
-// Create models
+// Exporting models
 export const UserModel = mongoose.model("User", userSchema);
 export const ContentModel = mongoose.model("Content", contentSchema);
 export const LinkModel = mongoose.model("Link", linkSchema);

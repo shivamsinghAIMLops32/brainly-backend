@@ -2,26 +2,34 @@ import { z } from "zod";
 
 // Define the schema for user registration
 export const userZodSchema = z.object({
-  username: z.string().min(3).max(20), // Min 3, Max 20 chars
-  password: z.string().min(6), // Min 6 chars
+  username: z.string().min(3, "Username must be at least 3 characters long").max(30, "Username cannot exceed 30 characters"),
+  password: z.string().min(8, "Password must be at least 8 characters long"),
+});
+
+export const signinZodSchema = z.object({
+  username: z.string().min(3, "Username must be at least 3 characters long").max(30, "Username cannot exceed 30 characters"),
+  password: z.string().min(8, "Password must be at least 8 characters long"),
 });
 
 // Schema for content validation
 export const contentZodSchema = z.object({
-  title: z.string().min(5, "Title must be at least 5 characters"),
-  type: z.enum(["article", "video", "image"]).optional(), // Enum validation
-  content: z.string().min(10, "Content must be at least 10 characters"),
-   tags: z.array(z.string().regex(/^[a-fA-F0-9]{24}$/)).optional(), // Validate MongoDB ObjectId
-  userId: z.string().regex(/^[a-fA-F0-9]{24}$/, "Invalid userId"), // Validate MongoDB ObjectId
-  link:z.string()
+  title: z.string().min(1, "Title is required"),
+  type: z.enum(["article", "video", "image"]).refine(
+    (val) => ["article", "video", "image"].includes(val),
+    {
+      message: "Invalid content type",
+    }
+  ),
+  content: z.string().min(1, "Content is required"),
+  tags: z.array(z.string()).min(1, "At least one tag is required"),
+  link: z.string().optional(),
 });
 
-export const linkZodSchema = z.object({
-  hash: z.string(),
-  userId: z.string().regex(/^[a-fA-F0-9]{24}$/, "Invalid userId"), // Validate MongoDB ObjectId
-  
+export const contentIdZodSchema = z.object({
+  contentId: z.string().length(24, "Invalid content ID").optional(),
 });
 
-export const tagZodSchema = z.object({
-  title:z.string()
-})
+// export const shareContentZodSchema = z.object({
+//   contentId: z.string().length(24, "Invalid content ID").min(1, "Content ID is required"),
+// });
+

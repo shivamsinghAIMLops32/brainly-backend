@@ -7,8 +7,8 @@ exports.TagModel = exports.LinkModel = exports.ContentModel = exports.UserModel 
 const mongoose_1 = __importDefault(require("mongoose"));
 // User schema
 const userSchema = new mongoose_1.default.Schema({
-    username: { type: String, required: true, unique: true, index: true }, // Make sure indexing is intended for performance reasons
-    password: { type: String, required: true },
+    username: { type: String, required: true, unique: true, index: true }, // Indexing for performance reasons
+    password: { type: String, required: true }, // Store hashed password here
 }, { timestamps: true });
 // Content schema
 const contentSchema = new mongoose_1.default.Schema({
@@ -16,19 +16,20 @@ const contentSchema = new mongoose_1.default.Schema({
     link: { type: String, required: true },
     type: { type: String, enum: ["article", "video", "image"], required: true },
     content: { type: String, required: true },
-    tags: [{ type: mongoose_1.default.Schema.Types.ObjectId, ref: "Tag" }], // Use the model name "Tag" for references
-    userId: { type: mongoose_1.default.Schema.Types.ObjectId, ref: "User" }, // Use the model name "User" for references
+    tags: [{ type: mongoose_1.default.Schema.Types.ObjectId, ref: "Tag" }],
+    userId: { type: mongoose_1.default.Schema.Types.ObjectId, ref: "User", required: true },
 }, { timestamps: true });
 // Link schema
 const linkSchema = new mongoose_1.default.Schema({
     hash: { type: String, required: true },
-    userId: { type: mongoose_1.default.Schema.Types.ObjectId, ref: "User" }, // Use the model name "User"
+    userId: { type: mongoose_1.default.Schema.Types.ObjectId, ref: "User", required: true },
+    // contentId: { type: mongoose.Schema.Types.ObjectId, ref: "Content", required: true },
 }, { timestamps: true });
 // Tag schema
 const tagSchema = new mongoose_1.default.Schema({
-    title: { type: String, required: true },
+    title: { type: String, required: true, unique: true },
 }, { timestamps: true });
-// Create models
+// Exporting models
 exports.UserModel = mongoose_1.default.model("User", userSchema);
 exports.ContentModel = mongoose_1.default.model("Content", contentSchema);
 exports.LinkModel = mongoose_1.default.model("Link", linkSchema);

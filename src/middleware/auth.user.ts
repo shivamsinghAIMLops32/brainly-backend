@@ -8,9 +8,13 @@ interface DecodedToken {
 }
 
 const authMiddleware = (req: Request, res: Response, next: NextFunction): any => {
-  // Get token from cookies
-  const token = req.cookies.token;  // 'token' was set as a cookie in the login route
-   console.log(token);
+  const authHeader = req.headers['authorization'];
+console.log('Authorization Header:', authHeader);  // Log the full header
+
+  // Get token from Authorization header
+  // @ts-ignore
+  const token = req.headers['authorization']?.split(' ')[1];  // Extract token from "Bearer <token>"
+  console.log(token);
 
   if (!token) {
     return res.status(401).json({ error: 'No token provided' });

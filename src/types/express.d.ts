@@ -5,8 +5,8 @@ import * as express from "express";
 declare global {
   namespace Express {
     interface Request {
-      userId?: any; // Or replace `any` with the actual type of the user object
-      id?: any; // Or any other custom properties you want to add
+      userId?: string; // Or replace `any` with the actual type of the user object
+      id?: string; // Or any other custom properties you want to add
     }
   }
 }
